@@ -27,7 +27,7 @@ studentRouter.get("/countPages", async (req, resp) => {
   try {
     const count = await Student.countDocuments({}).exec();
     const pages = Math.ceil(count / 10);
-    resp.status(200).send({ pages });
+    resp.status(200).json({ pages });
   } catch (err) {
     console.log(err);
     resp.status(500).json("Internal server error");
@@ -49,10 +49,30 @@ studentRouter.get("/:page", async (req, resp) => {
       resp.status(404).json("Students not found");
       return;
     }
-    resp.status(200).send(data);
+    resp.status(200).json(data);
   } catch (err) {
     console.log(err);
     resp.status(500).json("Internal server error");
+  }
+});
+
+//searching a student by firstname
+studentRouter.get("/search/:fname", async (req, resp) => {
+  try {
+    const studentFName = req.params.fname;
+    const regEx = new RegExp("^" + studentFName);
+    const searchedStudent = await Student.find({
+      fname: regEx,
+    }).exec();
+    if (searchedStudent) {
+      console.log(searchedStudent);
+      return resp.status(200).json(searchedStudent);
+    } else {
+      return resp.status(404).json("Student not found");
+    }
+  } catch (error) {
+    console.log(error);
+    return resp.status(500).json("Internal Server Error" + error);
   }
 });
 
@@ -62,7 +82,7 @@ studentRouter.get("/single/:id", validateId, async (req, resp) => {
     const studentId = new ObjectId(req.params.id);
     const data = await Student.findOne({ _id: studentId }).exec();
     if (data) {
-      resp.status(200).send(data);
+      resp.status(200).json(data);
     } else {
       resp.status(400).json("Student details not found");
     }
